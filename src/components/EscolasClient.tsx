@@ -79,7 +79,7 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
     if (!mapsReady || !mapRef.current || mapInstance.current) return
     mapInstance.current = new window.google.maps.Map(mapRef.current, {
       center: userPosRef.current,
-      zoom: userPosRef.current === FALLBACK ? 11 : 13,
+      zoom: userPosRef.current === FALLBACK ? 12 : 15,
       mapId: 'visitas_map',
       streetViewControl: false,
       mapTypeControl: false,
@@ -172,7 +172,7 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
         })
 
         mapInstance.current.panTo({ lat, lng })
-        mapInstance.current.setZoom(13)
+        mapInstance.current.setZoom(15)
       }
       // Se o mapa ainda não existe, o useEffect de init vai usar userPosRef.current
     })
