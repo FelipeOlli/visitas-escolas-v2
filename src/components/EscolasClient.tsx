@@ -64,6 +64,7 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
   const markers = useRef<Record<string, { marker: any; dot: HTMLDivElement }>>({})
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userMarker = useRef<any>(null)
+  const userPosRef = useRef(FALLBACK)
 
   useEffect(() => {
     if (window.google?.maps) { setMapsReady(true); return }
@@ -77,8 +78,8 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
   useEffect(() => {
     if (!mapsReady || !mapRef.current || mapInstance.current) return
     mapInstance.current = new window.google.maps.Map(mapRef.current, {
-      center: FALLBACK,
-      zoom: 11,
+      center: userPosRef.current,
+      zoom: userPosRef.current === FALLBACK ? 11 : 13,
       mapId: 'visitas_map',
       streetViewControl: false,
       mapTypeControl: false,
@@ -97,6 +98,25 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
 
   function placeMarkers() {
     if (!mapInstance.current) return
+
+    // Marcador de localização do usuário (se já tiver posição real)
+    if (userPosRef.current !== FALLBACK) {
+      const dot = document.createElement('div')
+      dot.style.cssText = [
+        'width:16px;height:16px;border-radius:50%;',
+        'background:#4a9eff;',
+        'border:3px solid #fff;',
+        'box-shadow:0 0 0 4px rgba(74,158,255,0.25),0 2px 8px rgba(0,0,0,0.4);',
+      ].join('')
+      userMarker.current = new window.google.maps.marker.AdvancedMarkerElement({
+        map: mapInstance.current,
+        position: userPosRef.current,
+        content: dot,
+        title: 'Você está aqui',
+        zIndex: 9999,
+      })
+    }
+
     schools.forEach(school => {
       if (!school.lat || !school.lng) return
       const color = getColor(school.sigla)
@@ -128,33 +148,35 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(pos => {
       const { latitude: lat, longitude: lng } = pos.coords
+      userPosRef.current = { lat, lng }
       setUserPos({ lat, lng })
 
-      if (!mapInstance.current) return
+      // Se o mapa já foi inicializado, aplica imediatamente
+      if (mapInstance.current) {
+        if (userMarker.current) userMarker.current.map = null
 
-      // Remove marcador anterior
-      if (userMarker.current) userMarker.current.map = null
+        const dot = document.createElement('div')
+        dot.style.cssText = [
+          'width:16px;height:16px;border-radius:50%;',
+          'background:#4a9eff;',
+          'border:3px solid #fff;',
+          'box-shadow:0 0 0 4px rgba(74,158,255,0.25),0 2px 8px rgba(0,0,0,0.4);',
+        ].join('')
 
-      const dot = document.createElement('div')
-      dot.style.cssText = [
-        'width:16px;height:16px;border-radius:50%;',
-        'background:#4a9eff;',
-        'border:3px solid #fff;',
-        'box-shadow:0 0 0 4px rgba(74,158,255,0.25),0 2px 8px rgba(0,0,0,0.4);',
-      ].join('')
+        userMarker.current = new window.google.maps.marker.AdvancedMarkerElement({
+          map: mapInstance.current,
+          position: { lat, lng },
+          content: dot,
+          title: 'Você está aqui',
+          zIndex: 9999,
+        })
 
-      userMarker.current = new window.google.maps.marker.AdvancedMarkerElement({
-        map: mapInstance.current,
-        position: { lat, lng },
-        content: dot,
-        title: 'Você está aqui',
-        zIndex: 9999,
-      })
-
-      mapInstance.current.panTo({ lat, lng })
-      mapInstance.current.setZoom(13)
+        mapInstance.current.panTo({ lat, lng })
+        mapInstance.current.setZoom(13)
+      }
+      // Se o mapa ainda não existe, o useEffect de init vai usar userPosRef.current
     })
-  }, [mapsReady])
+  }, [])
 
   const filtered = schools
     .filter(s => {
