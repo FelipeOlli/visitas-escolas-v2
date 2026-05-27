@@ -87,7 +87,7 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
         content: dot,
         title: school.nome,
       })
-      marker.addListener('click', () => {
+      marker.addListener('gmp-click', () => {
         window.location.href = `/escolas/${encodeURIComponent(school.sigla)}`
       })
       markers.current[school.sigla] = { marker, dot }
