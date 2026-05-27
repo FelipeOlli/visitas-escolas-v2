@@ -62,6 +62,8 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
   const mapInstance = useRef<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markers = useRef<Record<string, { marker: any; dot: HTMLDivElement }>>({})
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userMarker = useRef<any>(null)
 
   useEffect(() => {
     if (window.google?.maps) { setMapsReady(true); return }
@@ -125,9 +127,34 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(pos => {
-      setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+      const { latitude: lat, longitude: lng } = pos.coords
+      setUserPos({ lat, lng })
+
+      if (!mapInstance.current) return
+
+      // Remove marcador anterior
+      if (userMarker.current) userMarker.current.map = null
+
+      const dot = document.createElement('div')
+      dot.style.cssText = [
+        'width:16px;height:16px;border-radius:50%;',
+        'background:#4a9eff;',
+        'border:3px solid #fff;',
+        'box-shadow:0 0 0 4px rgba(74,158,255,0.25),0 2px 8px rgba(0,0,0,0.4);',
+      ].join('')
+
+      userMarker.current = new window.google.maps.marker.AdvancedMarkerElement({
+        map: mapInstance.current,
+        position: { lat, lng },
+        content: dot,
+        title: 'Você está aqui',
+        zIndex: 9999,
+      })
+
+      mapInstance.current.panTo({ lat, lng })
+      mapInstance.current.setZoom(13)
     })
-  }, [])
+  }, [mapsReady])
 
   const filtered = schools
     .filter(s => {
@@ -193,7 +220,7 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
                     : 'bg-[#121212] text-[#737373] border border-[#262626] hover:border-[#404040] hover:text-[#fafafa]'
                 }`}
               >
-                {s === 'todos' ? `Todos (${filtered.length})` : s}
+                {s === 'todos' ? `Todos (${filtered.length})` : s.charAt(0).toUpperCase() + s.slice(1)}
               </button>
             ))}
           </div>
