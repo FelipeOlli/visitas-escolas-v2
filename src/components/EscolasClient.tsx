@@ -10,6 +10,23 @@ const FALLBACK = { lat: -22.8697, lng: -43.3297 }
 
 const STATUS_OPTIONS = ['todos', 'pendente', 'visitado', 'tentativa', 'reagendado'] as const
 
+const MAPS_DARK_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#0a0a0a' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#0a0a0a' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#525252' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#262626' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#404040' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#262626' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1a1a1a' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#050505' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#262626' }] },
+  { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#1a1a1a' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#525252' }] },
+]
+
 interface VisitaMap {
   [sigla: string]: {
     status: string
@@ -46,7 +63,6 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markers = useRef<Record<string, { marker: any; dot: HTMLDivElement }>>({})
 
-  // Carregar Maps SDK
   useEffect(() => {
     if (window.google?.maps) { setMapsReady(true); return }
     window.initMap = () => setMapsReady(true)
@@ -56,15 +72,17 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
     document.head.appendChild(script)
   }, [])
 
-  // Inicializar mapa
   useEffect(() => {
     if (!mapsReady || !mapRef.current || mapInstance.current) return
     mapInstance.current = new window.google.maps.Map(mapRef.current, {
       center: FALLBACK,
-      zoom: 12,
+      zoom: 11,
       mapId: 'visitas_map',
       streetViewControl: false,
       mapTypeControl: false,
+      zoomControl: true,
+      fullscreenControl: false,
+      styles: MAPS_DARK_STYLE,
     })
     placeMarkers()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,8 +97,11 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
     if (!mapInstance.current) return
     schools.forEach(school => {
       if (!school.lat || !school.lng) return
+      const color = getColor(school.sigla)
       const dot = document.createElement('div')
-      dot.style.cssText = `width:10px;height:10px;border-radius:50%;background:${getColor(school.sigla)};border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer;`
+      dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.15);box-shadow:0 0 8px ${color}80;cursor:pointer;transition:transform .15s;`
+      dot.onmouseenter = () => { dot.style.transform = 'scale(1.4)' }
+      dot.onmouseleave = () => { dot.style.transform = 'scale(1)' }
       const marker = new window.google.maps.marker.AdvancedMarkerElement({
         map: mapInstance.current!,
         position: { lat: school.lat, lng: school.lng },
@@ -94,14 +115,14 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
     })
   }
 
-  // Atualizar cores dos marcadores quando visitas mudam
   useEffect(() => {
     Object.entries(markers.current).forEach(([sigla, { dot }]) => {
-      dot.style.background = getColor(sigla)
+      const color = getColor(sigla)
+      dot.style.background = color
+      dot.style.boxShadow = `0 0 8px ${color}80`
     })
   }, [getColor])
 
-  // Geolocalização
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(pos => {
       setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude })
@@ -129,58 +150,74 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
     return acc
   }, {} as Record<string, number>)
 
+  const visitadoPct = Math.round(((counts.visitado ?? 0) / schools.length) * 100)
+
   return (
-    <div className="flex h-full">
-      {/* Sidebar */}
-      <aside className="w-80 flex flex-col border-r border-zinc-200 bg-white shrink-0">
-        {/* Stats */}
-        <div className="px-4 py-3 border-b border-zinc-100">
-          <div className="flex gap-3 text-xs text-zinc-500">
-            <span className="text-green-700 font-medium">{counts.visitado ?? 0} visitadas</span>
-            <span>{counts.pendente ?? 0} pendentes</span>
-            <span>{counts.tentativa ?? 0} tentativas</span>
+    <div className="p-4 lg:p-6 space-y-4">
+      {/* Stats + filtros */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Visitadas — hero stat */}
+        <div className="col-span-2 rounded-[28px] bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#262626] p-6 flex items-end justify-between">
+          <div>
+            <p className="text-xs text-[#737373] uppercase tracking-widest mb-1">Visitadas</p>
+            <p className="font-display text-6xl font-bold text-[#ccf381] tracking-tighter leading-none">
+              {counts.visitado ?? 0}
+            </p>
+            <p className="text-xs text-[#525252] mt-2">de {schools.length} escolas · {visitadoPct}%</p>
           </div>
-          <div className="mt-2 h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+          {/* Mini progress arc */}
+          <div className="flex flex-col items-end gap-1.5 text-xs text-[#525252]">
+            <span><span className="text-red-400">●</span> {counts.pendente ?? 0} pendentes</span>
+            <span><span className="text-yellow-400">●</span> {counts.tentativa ?? 0} tentativas</span>
+            <span><span className="text-violet-400">●</span> {counts.reagendado ?? 0} reagendados</span>
+          </div>
+        </div>
+
+        {/* Busca + filtros */}
+        <div className="col-span-2 rounded-[28px] bg-[#0a0a0a] border border-[#262626] p-5 flex flex-col gap-3">
+          <input
+            type="search"
+            placeholder="Buscar escola, bairro..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-[#121212] border border-[#262626] focus:border-[#ccf381] rounded-xl px-4 py-2.5 text-sm text-[#fafafa] placeholder-[#525252] outline-none transition-colors"
+          />
+          <div className="flex gap-2 flex-wrap">
+            {STATUS_OPTIONS.map(s => (
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  filter === s
+                    ? 'bg-[#ccf381] text-black'
+                    : 'bg-[#121212] text-[#737373] border border-[#262626] hover:border-[#404040] hover:text-[#fafafa]'
+                }`}
+              >
+                {s === 'todos' ? `Todos (${filtered.length})` : s}
+              </button>
+            ))}
+          </div>
+          {/* Progress bar */}
+          <div className="h-1 rounded-full bg-[#1a1a1a] overflow-hidden mt-auto">
             <div
-              className="h-full bg-green-600 rounded-full transition-all"
-              style={{ width: `${((counts.visitado ?? 0) / schools.length) * 100}%` }}
+              className="h-full rounded-full transition-all"
+              style={{ width: `${visitadoPct}%`, background: '#ccf381' }}
             />
           </div>
         </div>
+      </div>
 
-        {/* Busca */}
-        <div className="px-3 pt-3">
-          <input
-            type="search"
-            placeholder="Buscar escola..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+      {/* Mapa */}
+      <div className="rounded-[28px] overflow-hidden border border-[#262626]" style={{ height: 480 }}>
+        <div ref={mapRef} className="w-full h-full" />
+      </div>
 
-        {/* Filtros */}
-        <div className="flex gap-1 px-3 py-2 flex-wrap">
-          {STATUS_OPTIONS.map(s => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                filter === s
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-              }`}
-            >
-              {s === 'todos' ? `Todos (${schools.length})` : s}
-            </button>
-          ))}
-        </div>
-
-        {/* Lista */}
-        <div className="flex-1 overflow-y-auto">
-          <p className="px-4 py-2 text-xs text-zinc-400">
-            {filtered.length} unidade{filtered.length !== 1 ? 's' : ''}
-          </p>
+      {/* Lista de escolas */}
+      <div>
+        <p className="text-xs text-[#525252] mb-3 px-1">
+          {filtered.length} unidade{filtered.length !== 1 ? 's' : ''}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filtered.map(({ school, distKm }) => (
             <SchoolCard
               key={school.sigla}
@@ -190,10 +227,7 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
             />
           ))}
         </div>
-      </aside>
-
-      {/* Mapa */}
-      <div ref={mapRef} className="flex-1" />
+      </div>
     </div>
   )
 }

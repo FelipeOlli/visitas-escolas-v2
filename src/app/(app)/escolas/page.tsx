@@ -21,7 +21,7 @@ export default async function EscolasPage() {
     }
   }
 
-  const schools = (schoolsData as School[]).filter(s => s.lat && s.lng)
+  const schools = (schoolsData as School[])
 
   return <EscolasClient schools={schools} initialVisitas={visitasMap} />
 }

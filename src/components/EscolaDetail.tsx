@@ -30,16 +30,20 @@ function Field({ label, value }: { label: string; value?: string | null }) {
   if (!value) return null
   return (
     <div>
-      <dt className="text-xs font-medium text-zinc-400 uppercase tracking-wide">{label}</dt>
-      <dd className="mt-0.5 text-sm text-zinc-800">{value}</dd>
+      <dt className="text-[10px] font-medium text-[#525252] uppercase tracking-widest mb-0.5">{label}</dt>
+      <dd className="text-sm text-[#a3a3a3]">{value}</dd>
     </div>
   )
 }
+
+const inputClass = 'w-full bg-[#0a0a0a] border border-[#262626] focus:border-[#ccf381] rounded-xl px-3 py-2.5 text-sm text-[#fafafa] placeholder-[#525252] outline-none transition-colors'
+const labelClass = 'block text-[10px] font-medium text-[#525252] uppercase tracking-widest mb-1.5'
 
 export function EscolaDetail({ school, visita }: Props) {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
+  const [toastOk, setToastOk] = useState(true)
   const [status, setStatus] = useState(visita?.status ?? 'pendente')
   const [dataHora, setDataHora] = useState(
     visita?.dataHora ? new Date(visita.dataHora).toISOString().slice(0, 16) : ''
@@ -59,72 +63,76 @@ export function EscolaDetail({ school, visita }: Props) {
       body: JSON.stringify({ status, dataHora: dataHora || null, contato, contatoTel, obs }),
     })
     setSaving(false)
-    if (res.ok) {
-      setToast('Visita salva!')
-      router.refresh()
-      setTimeout(() => setToast(''), 3000)
-    } else {
-      setToast('Erro ao salvar.')
-      setTimeout(() => setToast(''), 3000)
-    }
+    setToastOk(res.ok)
+    setToast(res.ok ? 'Visita salva com sucesso!' : 'Erro ao salvar.')
+    if (res.ok) router.refresh()
+    setTimeout(() => setToast(''), 3000)
   }
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${school.endereco}, ${school.bairro}, Rio de Janeiro`)}`
 
   return (
-    <div className="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-4">
       {/* Voltar */}
-      <div className="col-span-full">
-        <Link href="/escolas" className="text-sm text-blue-600 hover:underline">
-          ← Voltar à lista
-        </Link>
-      </div>
+      <Link href="/escolas" className="inline-flex items-center gap-1.5 text-xs text-[#525252] hover:text-[#ccf381] transition-colors">
+        ← Voltar
+      </Link>
 
-      {/* Dados da escola */}
-      <div className="bg-white rounded-xl border border-zinc-200 p-6">
-        <h1 className="text-lg font-semibold text-zinc-900 mb-1">{school.nome}</h1>
-        <div className="flex items-center gap-2 mb-5">
-          <StatusBadge status={status} />
-          {visita && (
-            <span className="text-xs text-zinc-400">
-              atualizado por {visita.user.name} em {new Date(visita.updatedAt).toLocaleDateString('pt-BR')}
-            </span>
-          )}
+      {/* Bento topo */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Hero da escola */}
+        <div className="md:col-span-2 rounded-[28px] bg-gradient-to-br from-[#1a1a1a] to-[#0d0d0d] border border-[#262626] p-7 flex flex-col justify-between min-h-[220px]">
+          <div>
+            <StatusBadge status={status} />
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-[#fafafa] tracking-tight leading-tight mt-3">
+              {school.nome}
+            </h1>
+            {visita && (
+              <p className="text-xs text-[#525252] mt-2">
+                atualizado por <span className="text-[#737373]">{visita.user.name}</span>{' '}
+                em {new Date(visita.updatedAt).toLocaleDateString('pt-BR')}
+              </p>
+            )}
+          </div>
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 self-start inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#ccf381] text-black text-xs font-semibold hover:bg-[#b8e060] transition-colors"
+          >
+            Traçar rota →
+          </a>
         </div>
 
-        <dl className="space-y-3">
-          <Field label="Sigla"      value={school.sigla} />
-          <Field label="ID Setor"   value={school.id_setor} />
-          <Field label="CRE"        value={cre} />
-          <Field label="Endereço"   value={school.endereco} />
-          <Field label="Bairro"     value={school.bairro} />
-          <Field label="CEP"        value={school.cep} />
-          <Field label="Telefone"   value={school.telefone} />
-          <Field label="E-mail"     value={school.email} />
-        </dl>
-
-        <a
-          href={mapsUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-5 inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
-        >
-          Traçar rota no Google Maps →
-        </a>
+        {/* Dados da escola */}
+        <div className="rounded-[28px] bg-[#0a0a0a] border border-[#262626] p-6">
+          <p className="text-[10px] text-[#525252] uppercase tracking-widest mb-4">Informações</p>
+          <dl className="space-y-3">
+            <Field label="Sigla"    value={school.sigla} />
+            <Field label="ID Setor" value={school.id_setor} />
+            <Field label="CRE"      value={cre} />
+            <Field label="Endereço" value={school.endereco} />
+            <Field label="Bairro"   value={school.bairro} />
+            <Field label="CEP"      value={school.cep} />
+            <Field label="Telefone" value={school.telefone} />
+            <Field label="E-mail"   value={school.email} />
+          </dl>
+        </div>
       </div>
 
       {/* Formulário de visita */}
-      <div className="bg-white rounded-xl border border-zinc-200 p-6">
-        <h2 className="text-base font-semibold text-zinc-900 mb-4">Registrar visita</h2>
+      <div className="rounded-[28px] bg-[#0a0a0a] border border-[#262626] p-6 lg:p-8">
+        <h2 className="font-display text-base font-semibold text-[#fafafa] mb-6">Registrar visita</h2>
 
-        <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSave} className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">Status</label>
+              <label className={labelClass}>Status</label>
               <select
                 value={status}
                 onChange={e => setStatus(e.target.value)}
-                className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
+                style={{ colorScheme: 'dark' }}
               >
                 {STATUS_OPTIONS.map(s => (
                   <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
@@ -132,60 +140,65 @@ export function EscolaDetail({ school, visita }: Props) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">Data e Hora</label>
+              <label className={labelClass}>Data e Hora</label>
               <input
                 type="datetime-local"
                 value={dataHora}
                 onChange={e => setDataHora(e.target.value)}
-                className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
+                style={{ colorScheme: 'dark' }}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">Contato atendido</label>
+              <label className={labelClass}>Contato atendido</label>
               <input
                 type="text"
                 value={contato}
                 onChange={e => setContato(e.target.value)}
                 placeholder="Nome..."
-                className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">Telefone do contato</label>
+              <label className={labelClass}>Telefone do contato</label>
               <input
                 type="tel"
                 value={contatoTel}
                 onChange={e => setContatoTel(e.target.value)}
                 placeholder="(21) 9..."
-                className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-600 mb-1">Observações</label>
+            <label className={labelClass}>Observações</label>
             <textarea
               value={obs}
               onChange={e => setObs(e.target.value)}
               rows={4}
               placeholder="O que foi discutido, pontos de atenção..."
-              className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className={`${inputClass} resize-none`}
             />
           </div>
 
           <div className="flex items-center justify-between pt-1">
             {toast && (
-              <span className={`text-sm ${toast.includes('Erro') ? 'text-red-600' : 'text-green-600'}`}>
+              <div className={`text-xs px-4 py-2 rounded-xl border ${
+                toastOk
+                  ? 'bg-[#ccf381]/10 text-[#ccf381] border-[#ccf381]/20'
+                  : 'bg-red-500/10 text-red-400 border-red-500/20'
+              }`}>
                 {toast}
-              </span>
+              </div>
             )}
             <button
               type="submit"
               disabled={saving}
-              className="ml-auto bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="ml-auto bg-[#ccf381] hover:bg-[#b8e060] disabled:opacity-40 text-black font-semibold px-6 py-2.5 rounded-xl text-sm transition-colors"
             >
               {saving ? 'Salvando...' : 'Salvar visita'}
             </button>

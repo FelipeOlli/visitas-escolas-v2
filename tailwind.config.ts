@@ -8,13 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      colors: {
-        status: {
-          pendente:   '#C62828',
-          visitado:   '#2E7D32',
-          tentativa:  '#F57F17',
-          reagendado: '#6A1B9A',
-        },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'sans-serif'],
+        display: ['var(--font-space-grotesk)', 'sans-serif'],
       },
     },
   },

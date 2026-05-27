@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+const inputClass = 'w-full bg-[#121212] border border-[#262626] focus:border-[#ccf381] rounded-xl px-4 py-3 text-sm text-[#fafafa] placeholder-[#525252] outline-none transition-colors'
+const labelClass = 'block text-[10px] font-medium text-[#525252] uppercase tracking-widest mb-1.5'
+
 export default function RegisterPage() {
   const router = useRouter()
   const [error, setError] = useState('')
@@ -35,58 +38,56 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-zinc-200 p-8">
-        <h1 className="text-xl font-semibold text-zinc-900 mb-1">Criar conta</h1>
-        <p className="text-sm text-zinc-500 mb-6">Controle de Visitas — Escolas RJ</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="flex items-center gap-2 justify-center mb-8">
+          <span className="w-2 h-2 rounded-full bg-[#ccf381]" />
+          <span className="font-display text-sm font-semibold text-[#fafafa] tracking-tight">
+            Visitas Escolas RJ
+          </span>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Nome</label>
-            <input
-              name="name"
-              type="text"
-              required
-              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">E-mail</label>
-            <input
-              name="email"
-              type="email"
-              required
-              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">Senha</label>
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={6}
-              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        <div className="rounded-[32px] bg-[#0a0a0a] border border-[#262626] p-8">
+          <h1 className="font-display text-2xl font-bold text-[#fafafa] tracking-tight mb-1">Criar conta</h1>
+          <p className="text-xs text-[#525252] mb-7">Controle de visitas às unidades escolares</p>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className={labelClass}>Nome</label>
+              <input name="name" type="text" required autoComplete="name" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>E-mail</label>
+              <input name="email" type="email" required autoComplete="email" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Senha</label>
+              <input name="password" type="password" required minLength={6} autoComplete="new-password" className={inputClass} />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium py-2 rounded-lg text-sm transition-colors"
-          >
-            {loading ? 'Criando...' : 'Criar conta'}
-          </button>
-        </form>
+            {error && (
+              <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2.5">
+                {error}
+              </p>
+            )}
 
-        <p className="mt-5 text-sm text-center text-zinc-500">
-          Já tem conta?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Entrar
-          </Link>
-        </p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#ccf381] hover:bg-[#b8e060] disabled:opacity-40 text-black font-semibold py-3 rounded-xl text-sm transition-colors mt-2"
+            >
+              {loading ? 'Criando...' : 'Criar conta'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-xs text-center text-[#525252]">
+            Já tem conta?{' '}
+            <Link href="/login" className="text-[#ccf381] hover:underline">
+              Entrar
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
