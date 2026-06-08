@@ -256,25 +256,30 @@ export function EscolasClient({ schools, initialVisitas }: Props) {
         </div>
       </div>
 
-      {/* Mapa */}
-      <div className="rounded-[28px] overflow-hidden border border-[#262626]" style={{ height: 480 }}>
-        <div ref={mapRef} className="w-full h-full" />
-      </div>
+      {/* Mapa + Lista lado a lado */}
+      <div className="flex flex-col md:flex-row gap-4" style={{ height: 'clamp(400px, 65vh, 680px)' }}>
+        {/* Mapa */}
+        <div className="rounded-[28px] overflow-hidden border border-[#262626] flex-shrink-0 md:w-[380px] h-64 md:h-full">
+          <div ref={mapRef} className="w-full h-full" />
+        </div>
 
-      {/* Lista de escolas */}
-      <div>
-        <p className="text-xs text-[#525252] mb-3 px-1">
-          {filtered.length} unidade{filtered.length !== 1 ? 's' : ''}
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filtered.map(({ school, distKm }) => (
-            <SchoolCard
-              key={school.sigla}
-              school={school}
-              visita={visitas[school.sigla]}
-              distKm={distKm === Infinity ? undefined : distKm}
-            />
-          ))}
+        {/* Lista de escolas */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <p className="text-xs text-[#525252] mb-3 px-1 flex-shrink-0">
+            {filtered.length} unidade{filtered.length !== 1 ? 's' : ''}
+          </p>
+          <div className="flex-1 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+              {filtered.map(({ school, distKm }) => (
+                <SchoolCard
+                  key={school.sigla}
+                  school={school}
+                  visita={visitas[school.sigla]}
+                  distKm={distKm === Infinity ? undefined : distKm}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
