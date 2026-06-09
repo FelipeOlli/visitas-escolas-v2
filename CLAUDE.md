@@ -46,6 +46,12 @@ NEXT_PUBLIC_GOOGLE_MAPS_KEY=...  # build arg — deve ser passado no EasyPanel c
 
 ## Histórico de sessões
 
+### 2026-06-08
+- Layout de `EscolasClient.tsx` refatorado: mapa (380px fixo) e lista rolável lado a lado
+- Elimina necessidade de rolar a página para ver resultados da busca
+- Mobile mantém empilhado (`flex-col md:flex-row`)
+- Commit: `7180c49`
+
 ### 2026-05-26
 - Projeto criado do zero (Next.js 14 + Auth + Tailwind + Prisma)
 - Resolvidos: Edge Runtime bcrypt, Prisma OpenSSL 3 no Alpine, NEXT_PUBLIC build arg, gmp-click deprecation
